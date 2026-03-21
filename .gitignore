@@ -42,3 +42,9 @@ next-env.d.ts
 
 # database
 habitar.db
+
+# local env files
+.env.local
+
+# AI generated images
+public/generated/

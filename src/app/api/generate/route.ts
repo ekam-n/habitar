@@ -3,6 +3,7 @@ import { parseHabit } from "@/lib/rules/habits";
 import { generateTitle, generateButtonLabel } from "@/lib/rules/titles";
 import { generateBackgroundPrompt, generateAccessoryPrompt } from "@/lib/rules/prompts";
 import { createHabit, saveGeneration } from "@/lib/db/actions";
+import { generateBackgroundImage, generateAccessoryImage } from "@/lib/ai/imageService";
 
 export async function POST(req: NextRequest) {
   const { habitInput } = await req.json();
@@ -18,6 +19,8 @@ export async function POST(req: NextRequest) {
   const accessoryPrompt = generateAccessoryPrompt(profile);
 
   const habitId = createHabit(profile, buttonLabel);
+  const bgImagePath = await generateBackgroundImage(bgPrompt, habitId, 0);
+  const accessoryImagePath = await generateAccessoryImage(accessoryPrompt, habitId);
 
   saveGeneration({
     habitId,
@@ -25,6 +28,8 @@ export async function POST(req: NextRequest) {
     title,
     bgPrompt,
     accessoryPrompt,
+    bgImagePath,
+    accessoryImagePath,
   });
 
   return NextResponse.json({
@@ -34,5 +39,7 @@ export async function POST(req: NextRequest) {
     buttonLabel,
     bgPrompt,
     accessoryPrompt,
+    bgImagePath,
+    accessoryImagePath,
   });
 }

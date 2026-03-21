@@ -32,16 +32,16 @@ export function generateBackgroundPrompt(profile: HabitProfile, streak: number, 
   return `${scene}, ${progress}, ${styleInstruction}`;
 }
 
-export function generateAccessoryPrompt(profile: HabitProfile): string {
-  const domainProps: Record<HabitProfile["domain"], string[]> = {
-    fitness:    ["a dumbbell icon", "a water bottle", "wrist wraps", "a medal"],
-    study:      ["a stack of books", "a pen and notepad", "a glowing laptop", "reading glasses"],
-    wellness:   ["a candle", "a meditation cushion", "a small plant", "a tea cup"],
-    creativity: ["a paintbrush", "a sketchpad", "music notes", "a pencil"],
-    chores:     ["a broom", "a cleaning spray bottle", "a folded towel", "a checkmark badge"],
-    general:    ["a small badge", "a star", "a flame icon", "a simple emblem"],
-  };
+const domainProps: Record<HabitProfile["domain"], string[]> = {
+  fitness:    ["a dumbbell", "a water bottle", "a medal", "a pair of running shoes", "a kettlebell", "a protein shaker"],
+  study:      ["a stack of books", "an open notebook", "a pencil", "a desk lamp", "a graduation cap", "a pair of glasses"],
+  wellness:   ["a candle", "a yoga mat", "a tea cup", "a small potted plant", "a journal", "a water glass"],
+  creativity: ["a paintbrush", "a sketchpad", "a music note", "a pair of headphones", "a camera", "a pencil case"],
+  chores:     ["a broom", "a mop bucket", "a laundry basket", "a cleaning spray bottle", "a vacuum cleaner", "a dish rack"],
+  general:    ["a calendar", "a checkmark badge", "a clock", "a to-do list", "a key", "a star badge"],
+};
 
+export function generateAccessoryPrompt(profile: HabitProfile): string {
   const prop = pick(domainProps[profile.domain]);
-  return `${prop}, flat vector icon style, clean lines, simple shape, no text, no background, isolated asset`;
+  return `${prop}, simple flat vector icon, bold clean shape, centered composition, white background, no hands, no people, no text, minimal detail, graphic design style`;
 }
