@@ -15,7 +15,7 @@ export default function HabitForm({ onSubmit, loading }: Props) {
       <div className="text-center">
         <h1 className="text-6xl font-bold leading-tight mb-3">habitar</h1>
         <p className="text-[var(--ink-light)] text-lg italic" style={{ fontFamily: "Fraunces, serif" }}>
-          build your world, one habit at a time
+          build your habits, grow your world
         </p>
       </div>
 
@@ -41,7 +41,7 @@ export default function HabitForm({ onSubmit, loading }: Props) {
             fontFamily: "DM Sans, sans-serif",
           }}
         >
-          {loading ? "Generating your world…" : "Create My World →"}
+          {loading ? "Generating your world…" : "Start My Habit →"}
         </button>
       </div>
     </div>

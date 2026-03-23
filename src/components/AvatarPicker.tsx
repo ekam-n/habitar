@@ -28,7 +28,7 @@ export default function AvatarPicker({ onComplete }: Props) {
           className="text-[var(--ink-light)] italic text-lg"
           style={{ fontFamily: "Fraunces, serif" }}
         >
-          first, create your character
+          create your habitar
         </p>
       </div>
 
@@ -90,7 +90,7 @@ export default function AvatarPicker({ onComplete }: Props) {
           fontFamily: "DM Sans, sans-serif",
         }}
       >
-        Build My World →
+        Build My Habit →
       </button>
     </div>
   );
