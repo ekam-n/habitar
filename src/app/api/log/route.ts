@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateTitle } from "@/lib/rules/titles";
 import { generateBackgroundPrompt, generateAccessoryPrompt } from "@/lib/rules/prompts";
+import { generateBackgroundImage, generateAccessoryImage } from "@/lib/ai/imageService";
 import { logHabit, getHabit, saveGeneration } from "@/lib/db/actions";
 import { HabitProfile } from "@/lib/rules/habits";
 
@@ -33,13 +34,17 @@ export async function POST(req: NextRequest) {
   const title = generateTitle(profile, streak, missedYesterday);
   const bgPrompt = generateBackgroundPrompt(profile, streak, missedYesterday);
   const accessoryPrompt = generateAccessoryPrompt(profile);
-
+  const bgImagePath = await generateBackgroundImage(bgPrompt, habitId, streak); 
+  const accessoryImagePath = await generateAccessoryImage(accessoryPrompt, habitId);
+  
   saveGeneration({
     habitId,
     streakAtTime: streak,
     title,
     bgPrompt,
     accessoryPrompt,
+    bgImagePath,
+    accessoryImagePath,
   });
 
   return NextResponse.json({
@@ -48,5 +53,7 @@ export async function POST(req: NextRequest) {
     title,
     bgPrompt,
     accessoryPrompt,
+    bgImagePath,
+    accessoryImagePath,
   });
 }
