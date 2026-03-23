@@ -42,6 +42,8 @@ next-env.d.ts
 
 # database
 habitar.db
+habitar.db-shm
+habitar.db-wal
 
 # local env files
 .env.local

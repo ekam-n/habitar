@@ -17,15 +17,15 @@ export function getDb(): Database.Database {
 function initTables(db: Database.Database) {
   db.exec(`
     CREATE TABLE IF NOT EXISTS habits (
-      id          INTEGER PRIMARY KEY AUTOINCREMENT,
-      raw_input   TEXT NOT NULL,
-      domain      TEXT NOT NULL,
-      tone        TEXT NOT NULL,
-      setting     TEXT NOT NULL,
-      reward_style TEXT NOT NULL,
-      button_label TEXT NOT NULL,
-      created_at  TEXT DEFAULT (datetime('now'))
-    );
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    raw_input     TEXT NOT NULL,
+    domain        TEXT NOT NULL,
+    tone          TEXT NOT NULL,
+    setting       TEXT NOT NULL,
+    reward_style  TEXT NOT NULL,
+    button_label  TEXT NOT NULL,
+    created_at    TEXT DEFAULT (datetime('now'))
+  );
 
     CREATE TABLE IF NOT EXISTS streaks (
       id                INTEGER PRIMARY KEY AUTOINCREMENT,

@@ -92,3 +92,7 @@ export function getLatestGeneration(habitId: number) {
     SELECT * FROM generations WHERE habit_id = ? ORDER BY created_at DESC LIMIT 1
   `).get(habitId) as any;
 }
+
+export function updateHabitAvatar(habitId: number, avatarImagePath: string) {
+  getDb().prepare(`UPDATE habits SET avatar_image_path = ? WHERE id = ?`).run(avatarImagePath, habitId);
+}

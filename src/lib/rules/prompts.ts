@@ -45,3 +45,17 @@ export function generateAccessoryPrompt(profile: HabitProfile): string {
   const prop = pick(domainProps[profile.domain]);
   return `${prop}, simple flat vector icon, bold clean shape, centered composition, white background, no hands, no people, no text, minimal detail, graphic design style`;
 }
+
+export function generateAvatarPrompt(profile: HabitProfile): string {
+  const outfitMap: Record<HabitProfile["domain"], string> = {
+    fitness:    "wearing athletic wear, gym outfit, sneakers",
+    study:      "wearing casual smart clothes, sitting posture",
+    wellness:   "wearing comfortable soft clothing, calm expression",
+    creativity: "wearing a creative casual outfit, relaxed pose",
+    chores:     "wearing casual home clothes, sleeves rolled up",
+    general:    "wearing casual everyday clothes, neutral pose",
+  };
+
+  const outfit = outfitMap[profile.domain];
+  return `a single full body character, ${outfit}, flat vector illustration style, simple clean design, soft color palette, plain white background, centered, no text, no background scenery, facing forward, friendly neutral expression, arms at sides`;
+}

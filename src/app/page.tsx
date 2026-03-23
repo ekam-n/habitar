@@ -1,7 +1,16 @@
 "use client";
 import { useState } from "react";
+import AvatarPicker from "@/components/AvatarPicker";
 import HabitForm from "@/components/HabitForm";
 import HabitWorldCard from "@/components/HabitWorldCard";
+import { BodyType, SkinToneKey } from "@/components/Avatar";
+
+type Step = "avatar" | "form" | "world";
+
+interface AvatarConfig {
+  bodyType: BodyType;
+  skinTone: SkinToneKey;
+}
 
 interface WorldState {
   habitId: number;
@@ -14,10 +23,17 @@ interface WorldState {
 }
 
 export default function Home() {
+  const [step, setStep] = useState<Step>("avatar");
+  const [avatarConfig, setAvatarConfig] = useState<AvatarConfig | null>(null);
   const [world, setWorld] = useState<WorldState | null>(null);
   const [loading, setLoading] = useState(false);
   const [logging, setLogging] = useState(false);
   const [alreadyLogged, setAlreadyLogged] = useState(false);
+
+  function handleAvatarComplete(bodyType: BodyType, skinTone: SkinToneKey) {
+    setAvatarConfig({ bodyType, skinTone });
+    setStep("form");
+  }
 
   async function handleCreate(habitInput: string) {
     setLoading(true);
@@ -37,6 +53,7 @@ export default function Home() {
         streak:             0,
         missedYesterday:    false,
       });
+      setStep("world");
     } finally {
       setLoading(false);
     }
@@ -58,13 +75,13 @@ export default function Home() {
         return;
       }
 
-      setWorld((prev) => prev ? {
+      setWorld(prev => prev ? {
         ...prev,
-        title:           data.title,
-        bgImagePath:     data.bgImagePath ?? prev.bgImagePath,
+        title:              data.title,
+        bgImagePath:        data.bgImagePath ?? prev.bgImagePath,
         accessoryImagePath: data.accessoryImagePath ?? prev.accessoryImagePath,
-        streak:          data.streak,
-        missedYesterday: data.missedYesterday,
+        streak:             data.streak,
+        missedYesterday:    data.missedYesterday,
       } : null);
       setAlreadyLogged(true);
     } finally {
@@ -73,18 +90,20 @@ export default function Home() {
   }
 
   return (
-    <main style={{
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      minHeight: "100vh",
-      padding: "24px",
-    }}>
-      {world ? (
+    <main className="flex items-center justify-center min-h-screen p-6">
+      {step === "avatar" && (
+        <AvatarPicker onComplete={handleAvatarComplete} />
+      )}
+      {step === "form" && (
+        <HabitForm onSubmit={handleCreate} loading={loading} />
+      )}
+      {step === "world" && world && avatarConfig && (
         <HabitWorldCard
           title={world.title}
           bgImagePath={world.bgImagePath}
           accessoryImagePath={world.accessoryImagePath}
+          avatarBodyType={avatarConfig.bodyType}
+          avatarSkinTone={avatarConfig.skinTone}
           streak={world.streak}
           buttonLabel={world.buttonLabel}
           onLog={handleLog}
@@ -92,8 +111,6 @@ export default function Home() {
           alreadyLogged={alreadyLogged}
           missedYesterday={world.missedYesterday}
         />
-      ) : (
-        <HabitForm onSubmit={handleCreate} loading={loading} />
       )}
     </main>
   );

@@ -1,9 +1,12 @@
 "use client";
+import Avatar, { BodyType, SkinToneKey } from "./Avatar";
 
 interface Props {
   title: string;
   bgImagePath: string;
   accessoryImagePath: string;
+  avatarBodyType: BodyType;
+  avatarSkinTone: SkinToneKey;
   streak: number;
   buttonLabel: string;
   onLog: () => void;
@@ -14,6 +17,7 @@ interface Props {
 
 export default function HabitWorldCard({
   title, bgImagePath, accessoryImagePath,
+  avatarBodyType, avatarSkinTone,
   streak, buttonLabel, onLog, logging, alreadyLogged, missedYesterday
 }: Props) {
   return (
@@ -25,15 +29,25 @@ export default function HabitWorldCard({
 
       {/* World Card */}
       <div className="relative rounded-3xl overflow-hidden shadow-2xl aspect-square bg-[var(--cream-dark)]">
-        {/* Background */}
+
+        {/* Background — in flow so aspect-square drives card height */}
         <img
           src={bgImagePath}
           alt="Habit world"
           className="w-full h-full object-cover"
         />
 
+        {/* Avatar — floating SVG at bottom center */}
+        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 z-10 w-1/3 h-2/3">
+          <Avatar
+            bodyType={avatarBodyType}
+            skinTone={avatarSkinTone}
+            animate={true}
+          />
+        </div>
+
         {/* Streak counter — top left */}
-        <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm rounded-xl px-3 py-2 shadow-md">
+        <div className="absolute top-4 left-4 z-20 bg-white/90 backdrop-blur-sm rounded-xl px-3 py-2 shadow-md">
           <span
             className="text-2xl font-bold text-[var(--accent)]"
             style={{ fontFamily: "Fraunces, serif" }}
@@ -46,7 +60,7 @@ export default function HabitWorldCard({
         </div>
 
         {/* Accessory badge — top right */}
-        <div className="absolute top-4 right-4 w-16 h-16 bg-white/90 backdrop-blur-sm rounded-full p-2 shadow-md">
+        <div className="absolute top-4 right-4 z-20 w-16 h-16 bg-white/90 backdrop-blur-sm rounded-full p-2 shadow-md">
           <img
             src={accessoryImagePath}
             alt="Accessory"
@@ -55,7 +69,7 @@ export default function HabitWorldCard({
         </div>
 
         {/* Title overlay — bottom */}
-        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent px-5 pt-10 pb-5">
+        <div className="absolute bottom-0 left-0 right-0 z-20 bg-gradient-to-t from-black/70 to-transparent px-5 pt-10 pb-5">
           <p
             className="text-xl font-semibold text-white italic"
             style={{ fontFamily: "Fraunces, serif" }}

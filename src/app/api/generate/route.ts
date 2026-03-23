@@ -19,27 +19,11 @@ export async function POST(req: NextRequest) {
   const accessoryPrompt = generateAccessoryPrompt(profile);
 
   const habitId = createHabit(profile, buttonLabel);
+
   const bgImagePath = await generateBackgroundImage(bgPrompt, habitId, 0);
   const accessoryImagePath = await generateAccessoryImage(accessoryPrompt, habitId);
 
-  saveGeneration({
-    habitId,
-    streakAtTime: 0,
-    title,
-    bgPrompt,
-    accessoryPrompt,
-    bgImagePath,
-    accessoryImagePath,
-  });
+  saveGeneration({ habitId, streakAtTime: 0, title, bgPrompt, accessoryPrompt, bgImagePath, accessoryImagePath });
 
-  return NextResponse.json({
-    habitId,
-    profile,
-    title,
-    buttonLabel,
-    bgPrompt,
-    accessoryPrompt,
-    bgImagePath,
-    accessoryImagePath,
-  });
+  return NextResponse.json({ habitId, profile, title, buttonLabel, bgImagePath, accessoryImagePath });
 }
