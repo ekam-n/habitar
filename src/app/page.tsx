@@ -14,7 +14,7 @@ const DEV_WORLD: WorldState = {
   buttonLabel: "Log Today's Run",
   bgImagePath: "/generated/bg_3_1_1774247204509.png",
   accessoryImagePath: "/generated/acc_3_1774247225628.png",
-  streak: 5,
+  streak: 0,
   missedYesterday: false,
 };
 
@@ -40,6 +40,7 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [logging, setLogging] = useState(false);
   const [alreadyLogged, setAlreadyLogged] = useState(false);
+  const [devGeneration, setDevGeneration] = useState(true);
 
   async function handleDevMode() {
     const res = await fetch("/api/dev/seed");
@@ -78,6 +79,16 @@ export default function Home() {
     }
   }
 
+  async function handleResetStreak() {
+    if (!world) return;
+    await fetch("/api/dev/reset", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ habitId: world.habitId }),
+    });
+    setWorld(prev => prev ? { ...prev, streak: 0 } : null);
+  }
+
   async function handleLog() {
     if (!world) return;
     setLogging(true);
@@ -88,6 +99,7 @@ export default function Home() {
         body: JSON.stringify({
           habitId: world.habitId,
           ...(process.env.NEXT_PUBLIC_DEV_MODE === "true" && { force: true }),
+          ...(process.env.NEXT_PUBLIC_DEV_MODE === "true" && !devGeneration && { skipGeneration: true }),
         }),
       });
       if (!res.ok) return;
@@ -115,12 +127,26 @@ export default function Home() {
   return (
     <main className="flex items-center justify-center min-h-screen p-6">
       {process.env.NEXT_PUBLIC_DEV_MODE === "true" && (
-        <button
-          onClick={handleDevMode}
-          className="fixed top-3 right-3 text-xs bg-black/40 text-white px-2 py-1 rounded z-50"
-        >
-          dev
-        </button>
+        <>
+          <button
+            onClick={handleDevMode}
+            className="fixed top-3 right-3 text-xs bg-black/40 text-white px-2 py-1 rounded z-50"
+          >
+            dev
+          </button>
+          <button
+            onClick={() => setDevGeneration(v => !v)}
+            className="fixed top-9 right-3 text-xs bg-black/40 text-white px-2 py-1 rounded z-50"
+          >
+            comfy: {devGeneration ? "on" : "off"}
+          </button>
+          <button
+            onClick={handleResetStreak}
+            className="fixed top-15 right-3 text-xs bg-black/40 text-white px-2 py-1 rounded z-50"
+          >
+            reset streak
+          </button>
+        </>
       )}
       {step === "avatar" && (
         <AvatarPicker onComplete={handleAvatarComplete} />

@@ -58,9 +58,9 @@ export function logHabit(habitId: number, force = false) {
   }
 
   const yesterday = new Date(Date.now() - 86400000).toISOString().split("T")[0];
-  const consecutive = lastLogged === yesterday;
+  const consecutive = force ? true : lastLogged === yesterday;
   const newStreak = consecutive ? streak.streak_count + 1 : 1;
-  const missedYesterday = lastLogged !== null && !consecutive ? 1 : 0;
+  const missedYesterday = (!force && lastLogged !== null && !consecutive) ? 1 : 0;
 
   db.prepare(`
     UPDATE streaks
@@ -101,6 +101,13 @@ export function getLatestGeneration(habitId: number) {
   return db.prepare(`
     SELECT * FROM generations WHERE habit_id = ? ORDER BY created_at DESC LIMIT 1
   `).get(habitId) as any;
+}
+
+export function resetStreak(habitId: number) {
+  getDb().prepare(`
+    UPDATE streaks SET streak_count = 0, last_logged_date = NULL, missed_yesterday = 0
+    WHERE habit_id = ?
+  `).run(habitId);
 }
 
 export function updateHabitAvatar(habitId: number, avatarImagePath: string) {
