@@ -7,6 +7,17 @@ import { BodyType, SkinToneKey } from "@/components/Avatar";
 
 type Step = "avatar" | "form" | "world";
 
+const DEV_AVATAR: AvatarConfig = { bodyType: "A", skinTone: "medium" };
+const DEV_WORLD: WorldState = {
+  habitId: 0,
+  title: "Dev Mode — Morning Run",
+  buttonLabel: "Log Today's Run",
+  bgImagePath: "/generated/bg_3_1_1774247204509.png",
+  accessoryImagePath: "/generated/acc_3_1774247225628.png",
+  streak: 5,
+  missedYesterday: false,
+};
+
 interface AvatarConfig {
   bodyType: BodyType;
   skinTone: SkinToneKey;
@@ -29,6 +40,12 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [logging, setLogging] = useState(false);
   const [alreadyLogged, setAlreadyLogged] = useState(false);
+
+  function handleDevMode() {
+    setAvatarConfig(DEV_AVATAR);
+    setWorld(DEV_WORLD);
+    setStep("world");
+  }
 
   function handleAvatarComplete(bodyType: BodyType, skinTone: SkinToneKey) {
     setAvatarConfig({ bodyType, skinTone });
@@ -91,6 +108,14 @@ export default function Home() {
 
   return (
     <main className="flex items-center justify-center min-h-screen p-6">
+      {process.env.NEXT_PUBLIC_DEV_MODE === "true" && (
+        <button
+          onClick={handleDevMode}
+          className="fixed top-3 right-3 text-xs bg-black/40 text-white px-2 py-1 rounded z-50"
+        >
+          dev
+        </button>
+      )}
       {step === "avatar" && (
         <AvatarPicker onComplete={handleAvatarComplete} />
       )}
