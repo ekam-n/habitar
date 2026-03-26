@@ -36,14 +36,24 @@ export function getStreak(habitId: number) {
   return db.prepare(`SELECT * FROM streaks WHERE habit_id = ?`).get(habitId) as any;
 }
 
-export function logHabit(habitId: number) {
+export function getOrCreateDevHabit(): number {
+  const db = getDb();
+  const existing = db.prepare(`SELECT id FROM habits WHERE raw_input = '__dev__' LIMIT 1`).get() as any;
+  if (existing) return existing.id;
+  return createHabit(
+    { rawInput: "__dev__", domain: "fitness", tone: "energetic", setting: "outdoors", rewardStyle: "bold", keywords: [] },
+    "Log Today's Run"
+  );
+}
+
+export function logHabit(habitId: number, force = false) {
   const db = getDb();
   const streak = getStreak(habitId);
   const today = new Date().toISOString().split("T")[0];
   const lastLogged = streak.last_logged_date;
 
   // Already logged today
-  if (lastLogged === today) {
+  if (!force && lastLogged === today) {
     return { alreadyLogged: true, streak: streak.streak_count };
   }
 

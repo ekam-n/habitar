@@ -6,13 +6,13 @@ import { logHabit, getHabit, saveGeneration } from "@/lib/db/actions";
 import { HabitProfile } from "@/lib/rules/habits";
 
 export async function POST(req: NextRequest) {
-  const { habitId } = await req.json();
+  const { habitId, force } = await req.json();
 
-  if (!habitId) {
+  if (habitId == null) {
     return NextResponse.json({ error: "No habitId provided" }, { status: 400 });
   }
 
-  const result = logHabit(habitId);
+  const result = logHabit(habitId, force === true);
 
   if (result.alreadyLogged) {
     return NextResponse.json({ alreadyLogged: true, streak: result.streak });

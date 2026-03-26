@@ -9,7 +9,7 @@ type Step = "avatar" | "form" | "world";
 
 const DEV_AVATAR: AvatarConfig = { bodyType: "A", skinTone: "medium" };
 const DEV_WORLD: WorldState = {
-  habitId: 0,
+  habitId: -1,
   title: "Dev Mode — Morning Run",
   buttonLabel: "Log Today's Run",
   bgImagePath: "/generated/bg_3_1_1774247204509.png",
@@ -41,9 +41,11 @@ export default function Home() {
   const [logging, setLogging] = useState(false);
   const [alreadyLogged, setAlreadyLogged] = useState(false);
 
-  function handleDevMode() {
+  async function handleDevMode() {
+    const res = await fetch("/api/dev/seed");
+    const { habitId } = await res.json();
     setAvatarConfig(DEV_AVATAR);
-    setWorld(DEV_WORLD);
+    setWorld({ ...DEV_WORLD, habitId });
     setStep("world");
   }
 
@@ -83,11 +85,15 @@ export default function Home() {
       const res = await fetch("/api/log", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ habitId: world.habitId }),
+        body: JSON.stringify({
+          habitId: world.habitId,
+          ...(process.env.NEXT_PUBLIC_DEV_MODE === "true" && { force: true }),
+        }),
       });
+      if (!res.ok) return;
       const data = await res.json();
 
-      if (data.alreadyLogged) {
+      if (data.alreadyLogged && process.env.NEXT_PUBLIC_DEV_MODE !== "true") {
         setAlreadyLogged(true);
         return;
       }
@@ -100,7 +106,7 @@ export default function Home() {
         streak:             data.streak,
         missedYesterday:    data.missedYesterday,
       } : null);
-      setAlreadyLogged(true);
+      if (process.env.NEXT_PUBLIC_DEV_MODE !== "true") setAlreadyLogged(true);
     } finally {
       setLogging(false);
     }
