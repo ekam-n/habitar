@@ -1,41 +1,30 @@
 "use client";
 import { useState } from "react";
-import AvatarPicker from "@/components/AvatarPicker";
 import HabitForm from "@/components/HabitForm";
 import HabitWorldCard from "@/components/HabitWorldCard";
-import { BodyType, SkinToneKey } from "@/components/Avatar";
 
-type Step = "avatar" | "form" | "world";
-
-const DEV_AVATAR: AvatarConfig = { bodyType: "A", skinTone: "medium" };
-const DEV_WORLD: WorldState = {
-  habitId: -1,
-  title: "Dev Mode — Morning Run",
-  buttonLabel: "Log Today's Run",
-  bgImagePath: "/generated/bg_3_1_1774247204509.png",
-  accessoryImagePath: "/generated/acc_3_1774247225628.png",
-  streak: 0,
-  missedYesterday: false,
-};
-
-interface AvatarConfig {
-  bodyType: BodyType;
-  skinTone: SkinToneKey;
-}
+type Step = "form" | "world";
 
 interface WorldState {
   habitId: number;
   title: string;
   buttonLabel: string;
   bgImagePath: string;
-  accessoryImagePath: string;
   streak: number;
   missedYesterday: boolean;
 }
 
+const DEV_WORLD: WorldState = {
+  habitId: -1,
+  title: "Dev Mode — Morning Run",
+  buttonLabel: "Log Today's Run",
+  bgImagePath: "/generated/bg_3_1_1774247204509.png",
+  streak: 0,
+  missedYesterday: false,
+};
+
 export default function Home() {
-  const [step, setStep] = useState<Step>("avatar");
-  const [avatarConfig, setAvatarConfig] = useState<AvatarConfig | null>(null);
+  const [step, setStep] = useState<Step>("form");
   const [world, setWorld] = useState<WorldState | null>(null);
   const [loading, setLoading] = useState(false);
   const [logging, setLogging] = useState(false);
@@ -45,14 +34,18 @@ export default function Home() {
   async function handleDevMode() {
     const res = await fetch("/api/dev/seed");
     const { habitId } = await res.json();
-    setAvatarConfig(DEV_AVATAR);
     setWorld({ ...DEV_WORLD, habitId });
     setStep("world");
   }
 
-  function handleAvatarComplete(bodyType: BodyType, skinTone: SkinToneKey) {
-    setAvatarConfig({ bodyType, skinTone });
-    setStep("form");
+  async function handleResetStreak() {
+    if (!world) return;
+    await fetch("/api/dev/reset", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ habitId: world.habitId }),
+    });
+    setWorld(prev => prev ? { ...prev, streak: 0 } : null);
   }
 
   async function handleCreate(habitInput: string) {
@@ -69,7 +62,6 @@ export default function Home() {
         title:              data.title,
         buttonLabel:        data.buttonLabel,
         bgImagePath:        data.bgImagePath,
-        accessoryImagePath: data.accessoryImagePath,
         streak:             0,
         missedYesterday:    false,
       });
@@ -77,16 +69,6 @@ export default function Home() {
     } finally {
       setLoading(false);
     }
-  }
-
-  async function handleResetStreak() {
-    if (!world) return;
-    await fetch("/api/dev/reset", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ habitId: world.habitId }),
-    });
-    setWorld(prev => prev ? { ...prev, streak: 0 } : null);
   }
 
   async function handleLog() {
@@ -114,7 +96,6 @@ export default function Home() {
         ...prev,
         title:              data.title,
         bgImagePath:        data.bgImagePath ?? prev.bgImagePath,
-        accessoryImagePath: data.accessoryImagePath ?? prev.accessoryImagePath,
         streak:             data.streak,
         missedYesterday:    data.missedYesterday,
       } : null);
@@ -148,19 +129,13 @@ export default function Home() {
           </button>
         </>
       )}
-      {step === "avatar" && (
-        <AvatarPicker onComplete={handleAvatarComplete} />
-      )}
       {step === "form" && (
         <HabitForm onSubmit={handleCreate} loading={loading} />
       )}
-      {step === "world" && world && avatarConfig && (
+      {step === "world" && world && (
         <HabitWorldCard
           title={world.title}
           bgImagePath={world.bgImagePath}
-          accessoryImagePath={world.accessoryImagePath}
-          avatarBodyType={avatarConfig.bodyType}
-          avatarSkinTone={avatarConfig.skinTone}
           streak={world.streak}
           buttonLabel={world.buttonLabel}
           onLog={handleLog}

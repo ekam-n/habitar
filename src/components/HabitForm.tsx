@@ -13,7 +13,7 @@ export default function HabitForm({ onSubmit, loading }: Props) {
     <div className="flex flex-col items-center gap-8 w-full max-w-md">
       {/* Title */}
       <div className="text-center">
-        <h1 className="text-6xl font-bold leading-tight mb-3">habitar</h1>
+        <h1 className="text-6xl font-bold leading-tight mb-3">habit world</h1>
         <p className="text-[var(--ink-light)] text-lg italic" style={{ fontFamily: "Fraunces, serif" }}>
           build your habits, grow your world
         </p>

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Habitar",
+  title: "Habit World",
   description: "Build your world, one habit at a time",
 };
 

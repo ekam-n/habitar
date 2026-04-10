@@ -76,23 +76,19 @@ export function saveGeneration(data: {
   streakAtTime: number;
   title: string;
   bgPrompt: string;
-  accessoryPrompt: string;
   bgImagePath?: string;
-  accessoryImagePath?: string;
 }) {
   const db = getDb();
   db.prepare(`
     INSERT INTO generations
-      (habit_id, streak_at_time, title, bg_prompt, accessory_prompt, bg_image_path, accessory_image_path)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
+      (habit_id, streak_at_time, title, bg_prompt, bg_image_path)
+    VALUES (?, ?, ?, ?, ?)
   `).run(
     data.habitId,
     data.streakAtTime,
     data.title,
     data.bgPrompt,
-    data.accessoryPrompt,
     data.bgImagePath ?? null,
-    data.accessoryImagePath ?? null,
   );
 }
 

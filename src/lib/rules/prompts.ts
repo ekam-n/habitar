@@ -32,30 +32,3 @@ export function generateBackgroundPrompt(profile: HabitProfile, streak: number, 
   return `${scene}, ${progress}, ${styleInstruction}`;
 }
 
-const domainProps: Record<HabitProfile["domain"], string[]> = {
-  fitness:    ["a dumbbell", "a water bottle", "a medal", "a pair of running shoes", "a kettlebell", "a protein shaker"],
-  study:      ["a stack of books", "an open notebook", "a pencil", "a desk lamp", "a graduation cap", "a pair of glasses"],
-  wellness:   ["a candle", "a yoga mat", "a tea cup", "a small potted plant", "a journal", "a water glass"],
-  creativity: ["a paintbrush", "a sketchpad", "a music note", "a pair of headphones", "a camera", "a pencil case"],
-  chores:     ["a broom", "a mop bucket", "a laundry basket", "a cleaning spray bottle", "a vacuum cleaner", "a dish rack"],
-  general:    ["a calendar", "a checkmark badge", "a clock", "a to-do list", "a key", "a star badge"],
-};
-
-export function generateAccessoryPrompt(profile: HabitProfile): string {
-  const prop = pick(domainProps[profile.domain]);
-  return `${prop}, simple flat vector icon, bold clean shape, centered composition, white background, no hands, no people, no text, minimal detail, graphic design style`;
-}
-
-export function generateAvatarPrompt(profile: HabitProfile): string {
-  const outfitMap: Record<HabitProfile["domain"], string> = {
-    fitness:    "wearing athletic wear, gym outfit, sneakers",
-    study:      "wearing casual smart clothes, sitting posture",
-    wellness:   "wearing comfortable soft clothing, calm expression",
-    creativity: "wearing a creative casual outfit, relaxed pose",
-    chores:     "wearing casual home clothes, sleeves rolled up",
-    general:    "wearing casual everyday clothes, neutral pose",
-  };
-
-  const outfit = outfitMap[profile.domain];
-  return `a single full body character, ${outfit}, flat vector illustration style, simple clean design, soft color palette, plain white background, centered, no text, no background scenery, facing forward, friendly neutral expression, arms at sides`;
-}

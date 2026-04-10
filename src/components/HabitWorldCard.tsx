@@ -1,12 +1,8 @@
 "use client";
-import Avatar, { BodyType, SkinToneKey } from "./Avatar";
 
 interface Props {
   title: string;
   bgImagePath: string;
-  accessoryImagePath: string;
-  avatarBodyType: BodyType;
-  avatarSkinTone: SkinToneKey;
   streak: number;
   buttonLabel: string;
   onLog: () => void;
@@ -16,35 +12,25 @@ interface Props {
 }
 
 export default function HabitWorldCard({
-  title, bgImagePath, accessoryImagePath,
-  avatarBodyType, avatarSkinTone,
+  title, bgImagePath,
   streak, buttonLabel, onLog, logging, alreadyLogged, missedYesterday
 }: Props) {
   return (
     <div className="flex flex-col gap-4 w-full max-w-md">
       {/* Header */}
       <div className="text-center">
-        <h1 className="text-3xl font-bold">habitar</h1>
+        <h1 className="text-3xl font-bold">habit world</h1>
       </div>
 
       {/* World Card */}
       <div className="relative rounded-3xl overflow-hidden shadow-2xl aspect-square bg-[var(--cream-dark)]">
 
-        {/* Background — in flow so aspect-square drives card height */}
+        {/* Background */}
         <img
           src={bgImagePath}
           alt="Habit world"
           className="w-full h-full object-cover"
         />
-
-        {/* Avatar — floating SVG at bottom center */}
-        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 z-10 w-1/3 h-2/3">
-          <Avatar
-            bodyType={avatarBodyType}
-            skinTone={avatarSkinTone}
-            animate={true}
-          />
-        </div>
 
         {/* Streak counter — top left */}
         <div className="absolute top-4 left-4 z-20 bg-white/90 backdrop-blur-sm rounded-xl px-3 py-2 shadow-md">
@@ -57,15 +43,6 @@ export default function HabitWorldCard({
           <span className="text-xs text-[var(--ink-light)] font-medium ml-1">
             day streak
           </span>
-        </div>
-
-        {/* Accessory badge — top right */}
-        <div className="absolute top-4 right-4 z-20 w-16 h-16 bg-white/90 backdrop-blur-sm rounded-full p-2 shadow-md">
-          <img
-            src={accessoryImagePath}
-            alt="Accessory"
-            className="w-full h-full object-contain"
-          />
         </div>
 
         {/* Title overlay — bottom */}
