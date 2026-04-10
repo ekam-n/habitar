@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import HabitForm from "@/components/HabitForm";
 import HabitWorldCard from "@/components/HabitWorldCard";
 
@@ -28,8 +28,26 @@ export default function Home() {
   const [world, setWorld] = useState<WorldState | null>(null);
   const [loading, setLoading] = useState(false);
   const [logging, setLogging] = useState(false);
-  const [alreadyLogged, setAlreadyLogged] = useState(false);
   const [devGeneration, setDevGeneration] = useState(true);
+
+  useEffect(() => {
+    const savedId = localStorage.getItem("habitId");
+    if (!savedId) return;
+    fetch(`/api/habit?id=${savedId}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (!data) return;
+        setWorld({
+          habitId:         data.habitId,
+          title:           data.title,
+          buttonLabel:     data.buttonLabel,
+          bgImagePath:     data.bgImagePath,
+          streak:          data.streak,
+          missedYesterday: data.missedYesterday,
+        });
+        setStep("world");
+      });
+  }, []);
 
   async function handleDevMode() {
     const res = await fetch("/api/dev/seed");
@@ -48,6 +66,25 @@ export default function Home() {
     setWorld(prev => prev ? { ...prev, streak: 0 } : null);
   }
 
+  async function handleReset() {
+    if (!world) return;
+    const res = await fetch("/api/reset", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ habitId: world.habitId }),
+    });
+    const data = await res.json();
+    setWorld(prev => prev ? { ...prev, streak: 0, title: data.title } : null);
+  }
+
+  async function handleDelete() {
+    if (!world) return;
+    await fetch(`/api/habit?id=${world.habitId}`, { method: "DELETE" });
+    localStorage.removeItem("habitId");
+    setWorld(null);
+    setStep("form");
+  }
+
   async function handleCreate(habitInput: string) {
     setLoading(true);
     try {
@@ -57,13 +94,14 @@ export default function Home() {
         body: JSON.stringify({ habitInput }),
       });
       const data = await res.json();
+      localStorage.setItem("habitId", String(data.habitId));
       setWorld({
-        habitId:            data.habitId,
-        title:              data.title,
-        buttonLabel:        data.buttonLabel,
-        bgImagePath:        data.bgImagePath,
-        streak:             0,
-        missedYesterday:    false,
+        habitId:         data.habitId,
+        title:           data.title,
+        buttonLabel:     data.buttonLabel,
+        bgImagePath:     data.bgImagePath,
+        streak:          0,
+        missedYesterday: false,
       });
       setStep("world");
     } finally {
@@ -80,26 +118,21 @@ export default function Home() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           habitId: world.habitId,
-          ...(process.env.NEXT_PUBLIC_DEV_MODE === "true" && { force: true }),
+          force: true,
           ...(process.env.NEXT_PUBLIC_DEV_MODE === "true" && !devGeneration && { skipGeneration: true }),
         }),
       });
       if (!res.ok) return;
       const data = await res.json();
-
-      if (data.alreadyLogged && process.env.NEXT_PUBLIC_DEV_MODE !== "true") {
-        setAlreadyLogged(true);
-        return;
-      }
+      if (data.alreadyLogged) return;
 
       setWorld(prev => prev ? {
         ...prev,
-        title:              data.title,
-        bgImagePath:        data.bgImagePath ?? prev.bgImagePath,
-        streak:             data.streak,
-        missedYesterday:    data.missedYesterday,
+        title:           data.title,
+        bgImagePath:     data.bgImagePath ?? prev.bgImagePath,
+        streak:          data.streak,
+        missedYesterday: data.missedYesterday,
       } : null);
-      if (process.env.NEXT_PUBLIC_DEV_MODE !== "true") setAlreadyLogged(true);
     } finally {
       setLogging(false);
     }
@@ -139,8 +172,9 @@ export default function Home() {
           streak={world.streak}
           buttonLabel={world.buttonLabel}
           onLog={handleLog}
+          onReset={handleReset}
+          onDelete={handleDelete}
           logging={logging}
-          alreadyLogged={alreadyLogged}
           missedYesterday={world.missedYesterday}
         />
       )}

@@ -75,7 +75,7 @@ export function saveGeneration(data: {
   habitId: number;
   streakAtTime: number;
   title: string;
-  bgPrompt: string;
+  bgPrompt?: string;
   bgImagePath?: string;
 }) {
   const db = getDb();
@@ -87,7 +87,7 @@ export function saveGeneration(data: {
     data.habitId,
     data.streakAtTime,
     data.title,
-    data.bgPrompt,
+    data.bgPrompt ?? null,
     data.bgImagePath ?? null,
   );
 }
@@ -97,6 +97,13 @@ export function getLatestGeneration(habitId: number) {
   return db.prepare(`
     SELECT * FROM generations WHERE habit_id = ? ORDER BY created_at DESC LIMIT 1
   `).get(habitId) as any;
+}
+
+export function deleteHabit(habitId: number) {
+  const db = getDb();
+  db.prepare(`DELETE FROM generations WHERE habit_id = ?`).run(habitId);
+  db.prepare(`DELETE FROM streaks WHERE habit_id = ?`).run(habitId);
+  db.prepare(`DELETE FROM habits WHERE id = ?`).run(habitId);
 }
 
 export function resetStreak(habitId: number) {
