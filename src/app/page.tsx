@@ -1,82 +1,59 @@
 "use client";
-import { useState } from "react";
-import AvatarPicker from "@/components/AvatarPicker";
+import { useState, useEffect } from "react";
 import HabitForm from "@/components/HabitForm";
 import HabitWorldCard from "@/components/HabitWorldCard";
-import { BodyType, SkinToneKey } from "@/components/Avatar";
 
-type Step = "avatar" | "form" | "world";
-
-const DEV_AVATAR: AvatarConfig = { bodyType: "A", skinTone: "medium" };
-const DEV_WORLD: WorldState = {
-  habitId: -1,
-  title: "Dev Mode — Morning Run",
-  buttonLabel: "Log Today's Run",
-  bgImagePath: "/generated/bg_3_1_1774247204509.png",
-  accessoryImagePath: "/generated/acc_3_1774247225628.png",
-  streak: 0,
-  missedYesterday: false,
-};
-
-interface AvatarConfig {
-  bodyType: BodyType;
-  skinTone: SkinToneKey;
-}
+type Step = "form" | "world";
 
 interface WorldState {
   habitId: number;
   title: string;
   buttonLabel: string;
   bgImagePath: string;
-  accessoryImagePath: string;
   streak: number;
   missedYesterday: boolean;
 }
 
+const DEV_WORLD: WorldState = {
+  habitId: -1,
+  title: "Dev Mode — Morning Run",
+  buttonLabel: "Log Today's Run",
+  bgImagePath: "/generated/bg_3_1_1774247204509.png",
+  streak: 0,
+  missedYesterday: false,
+};
+
 export default function Home() {
-  const [step, setStep] = useState<Step>("avatar");
-  const [avatarConfig, setAvatarConfig] = useState<AvatarConfig | null>(null);
+  const [step, setStep] = useState<Step>("form");
   const [world, setWorld] = useState<WorldState | null>(null);
   const [loading, setLoading] = useState(false);
   const [logging, setLogging] = useState(false);
-  const [alreadyLogged, setAlreadyLogged] = useState(false);
   const [devGeneration, setDevGeneration] = useState(true);
+
+  useEffect(() => {
+    const savedId = localStorage.getItem("habitId");
+    if (!savedId) return;
+    fetch(`/api/habit?id=${savedId}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (!data) return;
+        setWorld({
+          habitId:         data.habitId,
+          title:           data.title,
+          buttonLabel:     data.buttonLabel,
+          bgImagePath:     data.bgImagePath,
+          streak:          data.streak,
+          missedYesterday: data.missedYesterday,
+        });
+        setStep("world");
+      });
+  }, []);
 
   async function handleDevMode() {
     const res = await fetch("/api/dev/seed");
     const { habitId } = await res.json();
-    setAvatarConfig(DEV_AVATAR);
     setWorld({ ...DEV_WORLD, habitId });
     setStep("world");
-  }
-
-  function handleAvatarComplete(bodyType: BodyType, skinTone: SkinToneKey) {
-    setAvatarConfig({ bodyType, skinTone });
-    setStep("form");
-  }
-
-  async function handleCreate(habitInput: string) {
-    setLoading(true);
-    try {
-      const res = await fetch("/api/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ habitInput }),
-      });
-      const data = await res.json();
-      setWorld({
-        habitId:            data.habitId,
-        title:              data.title,
-        buttonLabel:        data.buttonLabel,
-        bgImagePath:        data.bgImagePath,
-        accessoryImagePath: data.accessoryImagePath,
-        streak:             0,
-        missedYesterday:    false,
-      });
-      setStep("world");
-    } finally {
-      setLoading(false);
-    }
   }
 
   async function handleResetStreak() {
@@ -89,6 +66,49 @@ export default function Home() {
     setWorld(prev => prev ? { ...prev, streak: 0 } : null);
   }
 
+  async function handleReset() {
+    if (!world) return;
+    const res = await fetch("/api/reset", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ habitId: world.habitId }),
+    });
+    const data = await res.json();
+    setWorld(prev => prev ? { ...prev, streak: 0, title: data.title } : null);
+  }
+
+  async function handleDelete() {
+    if (!world) return;
+    await fetch(`/api/habit?id=${world.habitId}`, { method: "DELETE" });
+    localStorage.removeItem("habitId");
+    setWorld(null);
+    setStep("form");
+  }
+
+  async function handleCreate(habitInput: string) {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ habitInput }),
+      });
+      const data = await res.json();
+      localStorage.setItem("habitId", String(data.habitId));
+      setWorld({
+        habitId:         data.habitId,
+        title:           data.title,
+        buttonLabel:     data.buttonLabel,
+        bgImagePath:     data.bgImagePath,
+        streak:          0,
+        missedYesterday: false,
+      });
+      setStep("world");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   async function handleLog() {
     if (!world) return;
     setLogging(true);
@@ -98,27 +118,21 @@ export default function Home() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           habitId: world.habitId,
-          ...(process.env.NEXT_PUBLIC_DEV_MODE === "true" && { force: true }),
+          force: true,
           ...(process.env.NEXT_PUBLIC_DEV_MODE === "true" && !devGeneration && { skipGeneration: true }),
         }),
       });
       if (!res.ok) return;
       const data = await res.json();
-
-      if (data.alreadyLogged && process.env.NEXT_PUBLIC_DEV_MODE !== "true") {
-        setAlreadyLogged(true);
-        return;
-      }
+      if (data.alreadyLogged) return;
 
       setWorld(prev => prev ? {
         ...prev,
-        title:              data.title,
-        bgImagePath:        data.bgImagePath ?? prev.bgImagePath,
-        accessoryImagePath: data.accessoryImagePath ?? prev.accessoryImagePath,
-        streak:             data.streak,
-        missedYesterday:    data.missedYesterday,
+        title:           data.title,
+        bgImagePath:     data.bgImagePath ?? prev.bgImagePath,
+        streak:          data.streak,
+        missedYesterday: data.missedYesterday,
       } : null);
-      if (process.env.NEXT_PUBLIC_DEV_MODE !== "true") setAlreadyLogged(true);
     } finally {
       setLogging(false);
     }
@@ -148,24 +162,19 @@ export default function Home() {
           </button>
         </>
       )}
-      {step === "avatar" && (
-        <AvatarPicker onComplete={handleAvatarComplete} />
-      )}
       {step === "form" && (
         <HabitForm onSubmit={handleCreate} loading={loading} />
       )}
-      {step === "world" && world && avatarConfig && (
+      {step === "world" && world && (
         <HabitWorldCard
           title={world.title}
           bgImagePath={world.bgImagePath}
-          accessoryImagePath={world.accessoryImagePath}
-          avatarBodyType={avatarConfig.bodyType}
-          avatarSkinTone={avatarConfig.skinTone}
           streak={world.streak}
           buttonLabel={world.buttonLabel}
           onLog={handleLog}
+          onReset={handleReset}
+          onDelete={handleDelete}
           logging={logging}
-          alreadyLogged={alreadyLogged}
           missedYesterday={world.missedYesterday}
         />
       )}

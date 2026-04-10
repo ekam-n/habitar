@@ -1,50 +1,37 @@
 "use client";
-import Avatar, { BodyType, SkinToneKey } from "./Avatar";
 
 interface Props {
   title: string;
   bgImagePath: string;
-  accessoryImagePath: string;
-  avatarBodyType: BodyType;
-  avatarSkinTone: SkinToneKey;
   streak: number;
   buttonLabel: string;
   onLog: () => void;
+  onReset: () => void;
+  onDelete: () => void;
   logging: boolean;
-  alreadyLogged: boolean;
   missedYesterday: boolean;
 }
 
 export default function HabitWorldCard({
-  title, bgImagePath, accessoryImagePath,
-  avatarBodyType, avatarSkinTone,
-  streak, buttonLabel, onLog, logging, alreadyLogged, missedYesterday
+  title, bgImagePath,
+  streak, buttonLabel, onLog, onReset, onDelete, logging, missedYesterday
 }: Props) {
   return (
     <div className="flex flex-col gap-4 w-full max-w-md">
       {/* Header */}
       <div className="text-center">
-        <h1 className="text-3xl font-bold">habitar</h1>
+        <h1 className="text-3xl font-bold">habit world</h1>
       </div>
 
       {/* World Card */}
       <div className="relative rounded-3xl overflow-hidden shadow-2xl aspect-square bg-[var(--cream-dark)]">
 
-        {/* Background — in flow so aspect-square drives card height */}
+        {/* Background */}
         <img
           src={bgImagePath}
           alt="Habit world"
           className="w-full h-full object-cover"
         />
-
-        {/* Avatar — floating SVG at bottom center */}
-        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 z-10 w-1/3 h-2/3">
-          <Avatar
-            bodyType={avatarBodyType}
-            skinTone={avatarSkinTone}
-            animate={true}
-          />
-        </div>
 
         {/* Streak counter — top left */}
         <div className="absolute top-4 left-4 z-20 bg-white/90 backdrop-blur-sm rounded-xl px-3 py-2 shadow-md">
@@ -57,15 +44,6 @@ export default function HabitWorldCard({
           <span className="text-xs text-[var(--ink-light)] font-medium ml-1">
             day streak
           </span>
-        </div>
-
-        {/* Accessory badge — top right */}
-        <div className="absolute top-4 right-4 z-20 w-16 h-16 bg-white/90 backdrop-blur-sm rounded-full p-2 shadow-md">
-          <img
-            src={accessoryImagePath}
-            alt="Accessory"
-            className="w-full h-full object-contain"
-          />
         </div>
 
         {/* Title overlay — bottom */}
@@ -89,23 +67,45 @@ export default function HabitWorldCard({
       {/* Log button */}
       <button
         onClick={onLog}
-        disabled={logging || alreadyLogged}
+        disabled={logging}
         className="w-full py-5 rounded-2xl text-base font-semibold transition-all duration-200 disabled:cursor-not-allowed hover:opacity-90 active:scale-[0.98]"
         style={{
-          background: alreadyLogged
-            ? "var(--cream-dark)"
-            : logging
-            ? "var(--accent-soft)"
-            : "var(--accent)",
-          color: alreadyLogged ? "var(--ink-light)" : "white",
+          background: logging ? "var(--accent-soft)" : "var(--accent)",
+          color: "white",
           fontFamily: "DM Sans, sans-serif",
         }}
       >
-        {alreadyLogged
-          ? "✓ Logged for today"
-          : logging
-          ? "Updating your world…"
-          : buttonLabel}
+        {logging ? "Updating your world…" : buttonLabel}
+      </button>
+
+      {/* Reset button */}
+      <button
+        onClick={onReset}
+        disabled={logging}
+        className="w-full py-3 rounded-2xl text-sm font-medium transition-all duration-200 disabled:cursor-not-allowed hover:opacity-80 active:scale-[0.98]"
+        style={{
+          background: "transparent",
+          color: "var(--ink-light)",
+          border: "1.5px solid var(--cream-dark)",
+          fontFamily: "DM Sans, sans-serif",
+        }}
+      >
+        Reset streak
+      </button>
+
+      {/* Delete button */}
+      <button
+        onClick={onDelete}
+        disabled={logging}
+        className="w-full py-3 rounded-2xl text-sm font-medium transition-all duration-200 disabled:cursor-not-allowed hover:opacity-80 active:scale-[0.98]"
+        style={{
+          background: "transparent",
+          color: "var(--ink-light)",
+          border: "1.5px solid var(--cream-dark)",
+          fontFamily: "DM Sans, sans-serif",
+        }}
+      >
+        Delete habit
       </button>
     </div>
   );

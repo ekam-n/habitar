@@ -24,7 +24,7 @@ h1, h2, h3 {
   font-family: 'Fraunces', serif;
 }
 
-@keyframes habitar-float {
+@keyframes habit-world-float {
   0%, 100% { transform: translateY(0); }
   50%       { transform: translateY(-12px); }
 }

@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { parseHabit } from "@/lib/rules/habits";
 import { generateTitle, generateButtonLabel } from "@/lib/rules/titles";
-import { generateBackgroundPrompt, generateAccessoryPrompt } from "@/lib/rules/prompts";
+import { generateBackgroundPrompt } from "@/lib/rules/prompts";
 import { createHabit, saveGeneration } from "@/lib/db/actions";
-import { generateBackgroundImage, generateAccessoryImage } from "@/lib/ai/imageService";
+import { generateBackgroundImage } from "@/lib/ai/imageService";
 
 export async function POST(req: NextRequest) {
   const { habitInput } = await req.json();
@@ -16,14 +16,12 @@ export async function POST(req: NextRequest) {
   const buttonLabel = generateButtonLabel(profile);
   const title = generateTitle(profile, 0, false);
   const bgPrompt = generateBackgroundPrompt(profile, 0, false);
-  const accessoryPrompt = generateAccessoryPrompt(profile);
 
   const habitId = createHabit(profile, buttonLabel);
 
   const bgImagePath = await generateBackgroundImage(bgPrompt, habitId, 0);
-  const accessoryImagePath = await generateAccessoryImage(accessoryPrompt, habitId);
 
-  saveGeneration({ habitId, streakAtTime: 0, title, bgPrompt, accessoryPrompt, bgImagePath, accessoryImagePath });
+  saveGeneration({ habitId, streakAtTime: 0, title, bgPrompt, bgImagePath });
 
-  return NextResponse.json({ habitId, profile, title, buttonLabel, bgImagePath, accessoryImagePath });
+  return NextResponse.json({ habitId, profile, title, buttonLabel, bgImagePath });
 }

@@ -1,14 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateTitle } from "@/lib/rules/titles";
-import { generateBackgroundPrompt, generateAccessoryPrompt } from "@/lib/rules/prompts";
-import { generateBackgroundImage, generateAccessoryImage } from "@/lib/ai/imageService";
-import { logHabit, getHabit, saveGeneration, getLatestGeneration } from "@/lib/db/actions";
+import { logHabit, getHabit, getLatestGeneration, saveGeneration } from "@/lib/db/actions";
 import { HabitProfile } from "@/lib/rules/habits";
 
-const GENERATION_MILESTONES = new Set([1, 3, 7, 14, 30]);
+const TITLE_MILESTONES = new Set([1, 3, 7, 14, 30]);
 
 export async function POST(req: NextRequest) {
-  const { habitId, force, skipGeneration } = await req.json();
+  const { habitId, force } = await req.json();
 
   if (habitId == null) {
     return NextResponse.json({ error: "No habitId provided" }, { status: 400 });
@@ -21,21 +19,18 @@ export async function POST(req: NextRequest) {
   }
 
   const { streak, missedYesterday = false } = result;
+  const latest = getLatestGeneration(habitId);
 
-  if (skipGeneration || !GENERATION_MILESTONES.has(streak)) {
-    const latest = getLatestGeneration(habitId);
+  if (!TITLE_MILESTONES.has(streak) && !missedYesterday) {
     return NextResponse.json({
       streak,
       missedYesterday,
-      title:               latest?.title ?? "",
-      bgImagePath:         latest?.bg_image_path ?? null,
-      accessoryImagePath:  latest?.accessory_image_path ?? null,
+      title:       latest?.title ?? "",
+      bgImagePath: latest?.bg_image_path ?? null,
     });
   }
 
   const habit = getHabit(habitId);
-
-  // Reconstruct profile from stored habit row
   const profile: HabitProfile = {
     domain:      habit.domain,
     tone:        habit.tone,
@@ -46,28 +41,12 @@ export async function POST(req: NextRequest) {
   };
 
   const title = generateTitle(profile, streak, missedYesterday);
-  const bgPrompt = generateBackgroundPrompt(profile, streak, missedYesterday);
-  const accessoryPrompt = generateAccessoryPrompt(profile);
-  const bgImagePath = await generateBackgroundImage(bgPrompt, habitId, streak); 
-  const accessoryImagePath = await generateAccessoryImage(accessoryPrompt, habitId);
-  
-  saveGeneration({
-    habitId,
-    streakAtTime: streak,
-    title,
-    bgPrompt,
-    accessoryPrompt,
-    bgImagePath,
-    accessoryImagePath,
-  });
+  saveGeneration({ habitId, streakAtTime: streak, title, bgImagePath: latest?.bg_image_path });
 
   return NextResponse.json({
     streak,
     missedYesterday,
     title,
-    bgPrompt,
-    accessoryPrompt,
-    bgImagePath,
-    accessoryImagePath,
+    bgImagePath: latest?.bg_image_path ?? null,
   });
 }
