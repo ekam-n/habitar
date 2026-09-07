@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getHabit, getStreak, getLatestGeneration, deleteHabit } from "@/lib/db/actions";
-import { generateTitle } from "@/lib/rules/titles";
+import { generateTitle, getStreakState } from "@/lib/rules/titles";
 import { HabitProfile } from "@/lib/rules/habits";
 
 export async function DELETE(req: NextRequest) {
@@ -34,14 +34,17 @@ export async function GET(req: NextRequest) {
     rawInput:    habit.raw_input,
   };
 
-  const title = latest?.title ?? generateTitle(profile, streak.streak_count, streak.missed_yesterday === 1);
+  const missedYesterday = streak.missed_yesterday === 1;
+  const title = latest?.title ?? generateTitle(profile, streak.streak_count, missedYesterday);
+  const stage = getStreakState(streak.streak_count, missedYesterday);
 
   return NextResponse.json({
     habitId,
     title,
+    stage,
     buttonLabel:     habit.button_label,
     bgImagePath:     latest?.bg_image_path ?? null,
     streak:          streak.streak_count,
-    missedYesterday: streak.missed_yesterday === 1,
+    missedYesterday,
   });
 }

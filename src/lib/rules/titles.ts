@@ -1,7 +1,20 @@
 import { HabitProfile } from "./habits";
 
-type StreakState = "start" | "building" | "committed" | "strong" | "elite" | "recovery";
+export type StreakState = "start" | "building" | "committed" | "strong" | "elite" | "recovery";
 
+/**
+ * The five ordinal growth stages, in order. `recovery` is deliberately NOT
+ * a member: it is an orthogonal mood that overrides display, not a rung on
+ * the ladder. Use this for anything that needs to compare or advance stages.
+ */
+export const GROWTH_STAGES = ["start", "building", "committed", "strong", "elite"] as const;
+
+export type GrowthStage = (typeof GROWTH_STAGES)[number];
+
+/**
+ * Single source of truth for streak -> stage. Stage boundaries live here and
+ * nowhere else; do not reintroduce a separate milestone set alongside them.
+ */
 export function getStreakState(streak: number, missedYesterday: boolean): StreakState {
   if (missedYesterday) return "recovery";
   if (streak === 0)    return "start";
