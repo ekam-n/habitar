@@ -114,10 +114,13 @@ export function saveGeneration(data: {
   );
 }
 
+// Ordered by id, not created_at: created_at is datetime('now') at one-second
+// resolution and the live database already contains same-second collisions,
+// which made "latest" arbitrary and let the title jump backwards.
 export function getLatestGeneration(habitId: number) {
   const db = getDb();
   return db.prepare(`
-    SELECT * FROM generations WHERE habit_id = ? ORDER BY created_at DESC LIMIT 1
+    SELECT * FROM generations WHERE habit_id = ? ORDER BY id DESC LIMIT 1
   `).get(habitId) as any;
 }
 

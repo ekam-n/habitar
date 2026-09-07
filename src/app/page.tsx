@@ -107,7 +107,10 @@ export default function Home() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           habitId: world.habitId,
-          force: true,
+          // `force` bypasses the once-a-day guard and the consecutive-day
+          // check, which also pins missedYesterday to 0 and makes `recovery`
+          // unreachable. Dev mode only; real logs run the real date logic.
+          ...(process.env.NEXT_PUBLIC_DEV_MODE === "true" && { force: true }),
         }),
       });
       if (!res.ok) return;
