@@ -10,7 +10,7 @@ A habit tracking app that generates an AI world image for your habit using Stabl
 ## Setup
 
 1. Clone or download this repository
-2. Open `.env.local` and set `COMFY_URL` to your ComfyUI address (default: `http://127.0.0.1:8000`)
+2. Open `.env.local` and set `COMFY_URL` to your ComfyUI address (default: `http://127.0.0.1:8188`)
 3. Make sure ComfyUI is running before launching the app
 
 ## Launch

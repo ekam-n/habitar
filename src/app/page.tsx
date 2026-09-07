@@ -28,7 +28,6 @@ export default function Home() {
   const [world, setWorld] = useState<WorldState | null>(null);
   const [loading, setLoading] = useState(false);
   const [logging, setLogging] = useState(false);
-  const [devGeneration, setDevGeneration] = useState(true);
 
   useEffect(() => {
     const savedId = localStorage.getItem("habitId");
@@ -54,16 +53,6 @@ export default function Home() {
     const { habitId } = await res.json();
     setWorld({ ...DEV_WORLD, habitId });
     setStep("world");
-  }
-
-  async function handleResetStreak() {
-    if (!world) return;
-    await fetch("/api/dev/reset", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ habitId: world.habitId }),
-    });
-    setWorld(prev => prev ? { ...prev, streak: 0 } : null);
   }
 
   async function handleReset() {
@@ -119,7 +108,6 @@ export default function Home() {
         body: JSON.stringify({
           habitId: world.habitId,
           force: true,
-          ...(process.env.NEXT_PUBLIC_DEV_MODE === "true" && !devGeneration && { skipGeneration: true }),
         }),
       });
       if (!res.ok) return;
@@ -149,14 +137,8 @@ export default function Home() {
             dev
           </button>
           <button
-            onClick={() => setDevGeneration(v => !v)}
+            onClick={handleReset}
             className="fixed top-9 right-3 text-xs bg-black/40 text-white px-2 py-1 rounded z-50"
-          >
-            comfy: {devGeneration ? "on" : "off"}
-          </button>
-          <button
-            onClick={handleResetStreak}
-            className="fixed top-15 right-3 text-xs bg-black/40 text-white px-2 py-1 rounded z-50"
           >
             reset streak
           </button>

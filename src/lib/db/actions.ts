@@ -112,7 +112,3 @@ export function resetStreak(habitId: number) {
     WHERE habit_id = ?
   `).run(habitId);
 }
-
-export function updateHabitAvatar(habitId: number, avatarImagePath: string) {
-  getDb().prepare(`UPDATE habits SET avatar_image_path = ? WHERE id = ?`).run(avatarImagePath, habitId);
-}
