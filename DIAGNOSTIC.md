@@ -422,10 +422,12 @@ Ordered roughly by how much they would bite you.
    but `generateAccessoryPrompt` was deleted from [prompts.ts](src/lib/rules/prompts.ts) in
    commit `c70dbc1` (`prompts.ts | 27 --`). The current file exports only
    `generateBackgroundPrompt` ([prompts.ts:28](src/lib/rules/prompts.ts#L28)).
-   *Inference, clearly labeled:* [tsconfig.json:25-32](tsconfig.json#L25-L32) includes
-   `**/*.ts` with no exclusion for this file, so I expect `next build` to fail type-checking
-   with TS2305. I did not run the build to confirm, per the read-only constraint — but
-   whether or not it breaks the build, the import is definitively broken. The file is also
+   *Correction (verified in Phase 0):* I originally inferred that `next build` would fail
+   type-checking with TS2305, since [tsconfig.json:25-32](tsconfig.json#L25-L32) includes
+   `**/*.ts` with no exclusion for this file. **That inference was wrong.** I ran the build
+   with the file still present and it passed — Next.js type-checks only files reachable from
+   the app graph, not everything in `tsconfig.include`. The import is still definitively
+   broken and the file is still dead; it simply was not blocking the build. The file is also
    not a real test: it is a script of `console.log`s with a top-level side-effectful
    `getDb()` at [line 13](src/lib/rules/test.ts#L13), it is not wired to any runner, and
    `package.json` has **no `test` script** ([package.json:4-9](package.json#L4-L9)).
