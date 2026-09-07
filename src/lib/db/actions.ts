@@ -31,6 +31,28 @@ export function getHabit(habitId: number) {
   return db.prepare(`SELECT * FROM habits WHERE id = ?`).get(habitId) as any;
 }
 
+export type HabitAppearance = {
+  characterId: string | null;
+  characterVariant: string | null;
+};
+
+export function getHabitAppearance(habitId: number): HabitAppearance | null {
+  const row = getDb()
+    .prepare(`SELECT character_id, character_variant FROM habits WHERE id = ?`)
+    .get(habitId) as { character_id: string | null; character_variant: string | null } | undefined;
+  if (!row) return null;
+  return {
+    characterId:      row.character_id ?? null,
+    characterVariant: row.character_variant ?? null,
+  };
+}
+
+export function setHabitAppearance(habitId: number, appearance: HabitAppearance) {
+  getDb()
+    .prepare(`UPDATE habits SET character_id = ?, character_variant = ? WHERE id = ?`)
+    .run(appearance.characterId, appearance.characterVariant, habitId);
+}
+
 export function getStreak(habitId: number) {
   const db = getDb();
   return db.prepare(`SELECT * FROM streaks WHERE habit_id = ?`).get(habitId) as any;
