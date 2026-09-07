@@ -2,6 +2,12 @@
 
 import type { StreakState } from "@/lib/rules/titles";
 
+/**
+ * Committed fallback scene. public/generated/ is gitignored, so a bg path
+ * stored in the database can outlive its file (fresh clone, cleared folder).
+ */
+export const PLACEHOLDER_BG = "/placeholder-world.svg";
+
 interface Props {
   title: string;
   bgImagePath: string;
@@ -40,6 +46,14 @@ export default function HabitWorldCard({
           src={bgImagePath}
           alt="Habit world"
           className="w-full h-full object-cover"
+          onError={(e) => {
+            // public/generated/ is gitignored, so a path stored in the DB can
+            // outlive its file (fresh clone, cleared folder). Fall back rather
+            // than showing a broken-image icon. Guarded so a missing
+            // placeholder cannot loop.
+            const img = e.currentTarget;
+            if (!img.src.endsWith(PLACEHOLDER_BG)) img.src = PLACEHOLDER_BG;
+          }}
         />
 
         {/* Streak counter — top left */}
