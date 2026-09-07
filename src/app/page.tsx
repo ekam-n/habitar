@@ -37,6 +37,12 @@ export default function Home() {
   const [world, setWorld] = useState<WorldState | null>(null);
   const [loading, setLoading] = useState(false);
   const [logging, setLogging] = useState(false);
+  // Two distinct message classes, deliberately separate. PHASE0.md flagged
+  // that overloading one slot was already uncomfortable with two kinds of
+  // message; the 3D layer adds a third, so they are split before that lands.
+  //   notice = expected, benign ("already logged today")
+  //   error  = something failed (generation, network, WebGL)
+  const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   /** Pull the server's error message out of a failed response, with a fallback. */
@@ -78,6 +84,7 @@ export default function Home() {
   }, []);
 
   async function handleDevMode() {
+    setNotice(null);
     setError(null);
     const res = await fetch("/api/dev/seed");
     if (!res.ok) {
@@ -92,6 +99,7 @@ export default function Home() {
 
   async function handleReset() {
     if (!world) return;
+    setNotice(null);
     setError(null);
     const res = await fetch("/api/reset", {
       method: "POST",
@@ -114,6 +122,7 @@ export default function Home() {
 
   async function handleDelete() {
     if (!world) return;
+    setNotice(null);
     setError(null);
     const res = await fetch(`/api/habit?id=${world.habitId}`, { method: "DELETE" });
     if (!res.ok) {
@@ -127,6 +136,7 @@ export default function Home() {
 
   async function handleCreate(habitInput: string) {
     setLoading(true);
+    setNotice(null);
     setError(null);
     try {
       const res = await fetch("/api/generate", {
@@ -165,6 +175,7 @@ export default function Home() {
   async function handleLog() {
     if (!world) return;
     setLogging(true);
+    setNotice(null);
     setError(null);
     try {
       const res = await fetch("/api/log", {
@@ -184,9 +195,8 @@ export default function Home() {
       }
       const data = await res.json();
       if (data.alreadyLogged) {
-        // Reachable again now that force:true is dev-only. Not an error, but
-        // it shares the one notice slot rather than going silent.
-        setError("Already logged today — see you tomorrow.");
+        // Reachable since force:true went dev-only. Benign, not a failure.
+        setNotice("Already logged today — see you tomorrow.");
         return;
       }
 
@@ -207,16 +217,31 @@ export default function Home() {
 
   return (
     <main className="flex flex-col items-center justify-center min-h-screen p-6 gap-4">
-      {error && (
+      {notice && (
         <div
           role="status"
-          className="w-full max-w-md rounded-2xl px-4 py-3 text-sm text-center bg-white border-2 border-[var(--accent-soft)] text-[var(--ink)]"
+          className="w-full max-w-md rounded-2xl px-4 py-3 text-sm text-center bg-[var(--accent-soft)] text-[var(--ink)]"
+        >
+          <span>{notice}</span>
+          <button
+            onClick={() => setNotice(null)}
+            aria-label="Dismiss"
+            className="ml-3 text-xs underline text-[var(--ink-light)] hover:opacity-70"
+          >
+            dismiss
+          </button>
+        </div>
+      )}
+      {error && (
+        <div
+          role="alert"
+          className="w-full max-w-md rounded-2xl px-4 py-3 text-sm text-center bg-white border-2 border-[#b4553f] text-[#7d3527]"
         >
           <span>{error}</span>
           <button
             onClick={() => setError(null)}
             aria-label="Dismiss"
-            className="ml-3 text-xs underline text-[var(--ink-light)] hover:opacity-70"
+            className="ml-3 text-xs underline hover:opacity-70"
           >
             dismiss
           </button>
@@ -255,6 +280,7 @@ export default function Home() {
           stage={world.stage}
           characterId={world.characterId}
           characterVariant={world.characterVariant}
+          onCharacterError={setError}
         />
       )}
     </main>

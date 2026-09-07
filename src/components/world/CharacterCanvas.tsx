@@ -1,6 +1,8 @@
 "use client";
 
+import { Suspense, useEffect, useState } from "react";
 import { Canvas } from "@react-three/fiber";
+import CanvasErrorBoundary from "./CanvasErrorBoundary";
 
 /*
  * CAMERA AND SIZING CONTRACT — read this before changing the container.
@@ -83,8 +85,73 @@ import { Canvas } from "@react-three/fiber";
 const CAMERA_FOV = 35;
 const CAMERA_POSITION: [number, number, number] = [0, 0, 5];
 
-export default function CharacterCanvas() {
+interface Props {
+  /** Surfaced to the user via page.tsx's error state. */
+  onError?: (message: string) => void;
+}
+
+/**
+ * Suspense fallback. Nothing suspends yet — phase 2's model loading will be
+ * the first thing that does — but the boundary is in place so a loading model
+ * has somewhere to land.
+ *
+ * Layout shift is impossible by construction here: the canvas box is sized by
+ * CSS (w-1/3 h-2/3 of the card), so no 3D content can change page layout. The
+ * fallback only has to avoid a visual pop, hence the same silhouette at low
+ * segment counts and reduced opacity.
+ */
+function LoadingPlaceholder() {
   return (
+    <mesh>
+      <capsuleGeometry args={[0.38, 0.85, 2, 6]} />
+      <meshBasicMaterial color="#c9b99e" transparent opacity={0.35} />
+    </mesh>
+  );
+}
+
+/**
+ * Probe for a usable WebGL context.
+ *
+ * This exists because the error boundary alone is NOT sufficient, which was
+ * verified rather than assumed: with WebGL disabled, three.js throws
+ * "THREE.WebGLRenderer: Error creating WebGL context" from inside R3F's
+ * renderer setup, which runs in an effect rather than in the render phase.
+ * React error boundaries only catch render-phase throws, so
+ * getDerivedStateFromError never fires. The observed result was a surviving
+ * page but two uncaught errors and no message for the user.
+ *
+ * So capability detection is done up front, and the boundary is kept for the
+ * class of failure it genuinely does catch (throws while building the scene).
+ */
+function detectWebGL(): boolean {
+  try {
+    const canvas = document.createElement("canvas");
+    return !!(canvas.getContext("webgl2") ?? canvas.getContext("webgl"));
+  } catch {
+    return false;
+  }
+}
+
+export default function CharacterCanvas({ onError }: Props) {
+  // null = not probed yet (also the SSR pass, where there is no document).
+  const [supported, setSupported] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    const ok = detectWebGL();
+    setSupported(ok);
+    if (!ok) {
+      onError?.("This browser cannot display the 3D character, so your world is showing without it.");
+    }
+    // onError is a setState fn from page.tsx and stable; probing once is intended.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Render nothing until proven supported. The slot is CSS-sized, so an empty
+  // slot costs no layout shift and the background carries the composite.
+  if (supported !== true) return null;
+
+  return (
+    <CanvasErrorBoundary onError={onError}>
     <Canvas
       // Cap DPR: retina would otherwise render 4x the pixels of a 1x display
       // for a ~149x299 CSS box, which is pure waste on a laptop GPU.
@@ -94,14 +161,35 @@ export default function CharacterCanvas() {
       // the AI background image composites through behind the character.
       gl={{ alpha: true, antialias: true }}
       style={{ background: "transparent" }}
+      onCreated={({ gl }) => {
+        // Context loss fires a DOM event rather than throwing, so the error
+        // boundary above cannot see it. Report it through the same channel.
+        gl.domElement.addEventListener("webglcontextlost", (e) => {
+          e.preventDefault();
+          onError?.("The 3D view lost its graphics context. Reload to bring the character back.");
+        });
+      }}
     >
-      <ambientLight intensity={0.9} />
-      <directionalLight position={[2, 4, 3]} intensity={1.6} />
+      {/*
+        A SECOND boundary, inside the Canvas. This is not redundant: R3F
+        renders Canvas children into its own reconciler root, so the DOM-side
+        boundary above cannot see throws from the scene graph. Verified - with
+        only the outer boundary, a scene throw unmounted the entire card.
+        Error boundaries are a reconciler-level feature, so a class component
+        works here too; it just returns null, which is a valid empty scene.
+      */}
+      <CanvasErrorBoundary onError={onError}>
+      <Suspense fallback={<LoadingPlaceholder />}>
+        <ambientLight intensity={0.9} />
+        <directionalLight position={[2, 4, 3]} intensity={1.6} />
 
-      <mesh>
-        <capsuleGeometry args={[0.38, 0.85, 8, 24]} />
-        <meshStandardMaterial color="#c17f4a" roughness={0.55} metalness={0.05} />
-      </mesh>
+        <mesh>
+          <capsuleGeometry args={[0.38, 0.85, 8, 24]} />
+          <meshStandardMaterial color="#c17f4a" roughness={0.55} metalness={0.05} />
+        </mesh>
+      </Suspense>
+      </CanvasErrorBoundary>
     </Canvas>
+    </CanvasErrorBoundary>
   );
 }

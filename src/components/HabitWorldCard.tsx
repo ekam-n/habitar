@@ -26,11 +26,15 @@ interface Props {
   stage: StreakState;
   characterId: string | null;
   characterVariant: string | null;
+
+  /** Raised when the 3D layer fails; surfaced by page.tsx's error banner. */
+  onCharacterError?: (message: string) => void;
 }
 
 export default function HabitWorldCard({
   title, bgImagePath,
   streak, buttonLabel, onLog, onReset, onDelete, logging, missedYesterday,
+  onCharacterError,
 }: Props) {
   return (
     <div className="flex flex-col gap-4 w-full max-w-md">
@@ -59,7 +63,7 @@ export default function HabitWorldCard({
 
         {/* Character — the slot the deleted SVG avatar used to occupy */}
         <div className="absolute bottom-0 left-1/2 -translate-x-1/2 z-10 w-1/3 h-2/3">
-          <CharacterCanvas />
+          <CharacterCanvas onError={onCharacterError} />
         </div>
 
         {/* Streak counter — top left */}
