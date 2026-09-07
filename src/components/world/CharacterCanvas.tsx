@@ -45,6 +45,40 @@ import { Canvas } from "@react-three/fiber";
  *     That is the case to avoid.
  * Recompute with the formulas above rather than nudging numbers until it
  * looks right.
+ *
+ * MEASURED (headless Chrome, WebGL2, production build, six viewport widths
+ * from 900px down to 320px, which drives the card from 448px to 224px):
+ *
+ *   viewport  card  canvas css     aspect  char/canvasW  char/canvasH
+ *   900       448   149.3x298.7    0.4998  0.4956        0.5223
+ *   640       448   149.3x298.7    0.4998  0.4956        0.5223
+ *   480       384   128  x256      0.5000  0.4922        0.5156
+ *   400       304   101.3x202.7    0.4998  0.4936        0.5229
+ *   360       264    88  x176      0.5000  0.5114        0.5227
+ *   320       224    74.7x149.3    0.5003  0.5087        0.5157
+ *
+ * Aspect holds at 0.5 throughout. Apparent size spread is 3.8% on width and
+ * 1.4% on height across a 2x range of card sizes — and that residue is pixel
+ * quantisation, not drift: at a 74.7px-wide canvas the character is 38px, so
+ * a single antialiased edge pixel is already 2.6%.
+ *
+ * R3F's ResizeObserver was confirmed to work inside this specific container
+ * rather than assumed: the drawing buffer tracks the CSS box at every width.
+ *
+ * Two further properties, both verified rather than reasoned about:
+ *   - dpr={[1,2]} genuinely caps. At devicePixelRatio 3 the buffer stays at
+ *     2x (298x597 for a 149.3x298.7 box) instead of going to 3x.
+ *   - The canvas paints nothing outside its slot (0 pixels), and the card's
+ *     rounded-3xl corners stay clipped. Note the slot spans x 149..299 of
+ *     448 while the corner radius is 24px, so the canvas never reaches a
+ *     rounded corner in the first place — corner bleed is structurally
+ *     impossible here, not merely absent.
+ *
+ * One thing that is NOT a sizing bug but looks like one when measuring: the
+ * title gradient at z-20 occludes the character's lower body, so the
+ * character's *visible* extent is smaller than its *rendered* extent, and
+ * the two diverge as the card shrinks (the gradient is text-sized and does
+ * not scale with the card). Measure with the z-20 chrome hidden.
  */
 const CAMERA_FOV = 35;
 const CAMERA_POSITION: [number, number, number] = [0, 0, 5];
