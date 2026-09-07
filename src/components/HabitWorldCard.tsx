@@ -1,5 +1,7 @@
 "use client";
 
+import type { StreakState } from "@/lib/rules/titles";
+
 interface Props {
   title: string;
   bgImagePath: string;
@@ -10,11 +12,18 @@ interface Props {
   onDelete: () => void;
   logging: boolean;
   missedYesterday: boolean;
+
+  // Phase 0 plumbing. Accepted and intentionally unrendered: the 3D layer
+  // that consumes them lands in the next phase. `stage` is streak-derived,
+  // the two character fields are the user's chosen appearance.
+  stage: StreakState;
+  characterId: string | null;
+  characterVariant: string | null;
 }
 
 export default function HabitWorldCard({
   title, bgImagePath,
-  streak, buttonLabel, onLog, onReset, onDelete, logging, missedYesterday
+  streak, buttonLabel, onLog, onReset, onDelete, logging, missedYesterday,
 }: Props) {
   return (
     <div className="flex flex-col gap-4 w-full max-w-md">

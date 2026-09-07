@@ -24,5 +24,15 @@ export async function POST(req: NextRequest) {
 
   saveGeneration({ habitId, streakAtTime: 0, title, bgPrompt, bgImagePath });
 
-  return NextResponse.json({ habitId, profile, title, stage, buttonLabel, bgImagePath });
+  return NextResponse.json({
+    habitId,
+    profile,
+    title,
+    stage,
+    buttonLabel,
+    bgImagePath,
+    // Appearance is chosen in a later onboarding step; not picked yet.
+    characterId:      null,
+    characterVariant: null,
+  });
 }

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getHabit, getStreak, getLatestGeneration, deleteHabit } from "@/lib/db/actions";
+import { getHabit, getStreak, getLatestGeneration, deleteHabit, getHabitAppearance } from "@/lib/db/actions";
 import { generateTitle, getStreakState } from "@/lib/rules/titles";
 import { HabitProfile } from "@/lib/rules/habits";
 
@@ -37,11 +37,14 @@ export async function GET(req: NextRequest) {
   const missedYesterday = streak.missed_yesterday === 1;
   const title = latest?.title ?? generateTitle(profile, streak.streak_count, missedYesterday);
   const stage = getStreakState(streak.streak_count, missedYesterday);
+  const appearance = getHabitAppearance(habitId);
 
   return NextResponse.json({
     habitId,
     title,
     stage,
+    characterId:      appearance?.characterId ?? null,
+    characterVariant: appearance?.characterVariant ?? null,
     buttonLabel:     habit.button_label,
     bgImagePath:     latest?.bg_image_path ?? null,
     streak:          streak.streak_count,

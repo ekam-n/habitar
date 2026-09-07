@@ -2,8 +2,12 @@
 import { useState, useEffect } from "react";
 import HabitForm from "@/components/HabitForm";
 import HabitWorldCard from "@/components/HabitWorldCard";
+import type { StreakState } from "@/lib/rules/titles";
 
 type Step = "form" | "world";
+
+/** Committed fallback; public/generated/ is gitignored and empty on a clone. */
+const PLACEHOLDER_BG = "/placeholder-world.svg";
 
 interface WorldState {
   habitId: number;
@@ -12,15 +16,23 @@ interface WorldState {
   bgImagePath: string;
   streak: number;
   missedYesterday: boolean;
+  /** Streak-derived. Drives which growth stage the world/character shows. */
+  stage: StreakState;
+  /** User-chosen appearance. Null until onboarding picks one. */
+  characterId: string | null;
+  characterVariant: string | null;
 }
 
 const DEV_WORLD: WorldState = {
   habitId: -1,
   title: "Dev Mode — Morning Run",
   buttonLabel: "Log Today's Run",
-  bgImagePath: "/generated/bg_3_1_1774247204509.png",
+  bgImagePath: PLACEHOLDER_BG,
   streak: 0,
   missedYesterday: false,
+  stage: "start",
+  characterId: null,
+  characterVariant: null,
 };
 
 export default function Home() {
@@ -37,12 +49,15 @@ export default function Home() {
       .then(data => {
         if (!data) return;
         setWorld({
-          habitId:         data.habitId,
-          title:           data.title,
-          buttonLabel:     data.buttonLabel,
-          bgImagePath:     data.bgImagePath,
-          streak:          data.streak,
-          missedYesterday: data.missedYesterday,
+          habitId:          data.habitId,
+          title:            data.title,
+          buttonLabel:      data.buttonLabel,
+          bgImagePath:      data.bgImagePath ?? PLACEHOLDER_BG,
+          streak:           data.streak,
+          missedYesterday:  data.missedYesterday,
+          stage:            data.stage,
+          characterId:      data.characterId ?? null,
+          characterVariant: data.characterVariant ?? null,
         });
         setStep("world");
       });
@@ -51,6 +66,7 @@ export default function Home() {
   async function handleDevMode() {
     const res = await fetch("/api/dev/seed");
     const { habitId } = await res.json();
+    localStorage.setItem("habitId", String(habitId));
     setWorld({ ...DEV_WORLD, habitId });
     setStep("world");
   }
@@ -63,7 +79,13 @@ export default function Home() {
       body: JSON.stringify({ habitId: world.habitId }),
     });
     const data = await res.json();
-    setWorld(prev => prev ? { ...prev, streak: 0, title: data.title } : null);
+    setWorld(prev => prev ? {
+      ...prev,
+      streak:          0,
+      title:           data.title,
+      stage:           data.stage,
+      missedYesterday: false,
+    } : null);
   }
 
   async function handleDelete() {
@@ -85,12 +107,15 @@ export default function Home() {
       const data = await res.json();
       localStorage.setItem("habitId", String(data.habitId));
       setWorld({
-        habitId:         data.habitId,
-        title:           data.title,
-        buttonLabel:     data.buttonLabel,
-        bgImagePath:     data.bgImagePath,
-        streak:          0,
-        missedYesterday: false,
+        habitId:          data.habitId,
+        title:            data.title,
+        buttonLabel:      data.buttonLabel,
+        bgImagePath:      data.bgImagePath ?? PLACEHOLDER_BG,
+        streak:           0,
+        missedYesterday:  false,
+        stage:            data.stage,
+        characterId:      data.characterId ?? null,
+        characterVariant: data.characterVariant ?? null,
       });
       setStep("world");
     } finally {
@@ -123,6 +148,7 @@ export default function Home() {
         bgImagePath:     data.bgImagePath ?? prev.bgImagePath,
         streak:          data.streak,
         missedYesterday: data.missedYesterday,
+        stage:           data.stage,
       } : null);
     } finally {
       setLogging(false);
@@ -161,6 +187,9 @@ export default function Home() {
           onDelete={handleDelete}
           logging={logging}
           missedYesterday={world.missedYesterday}
+          stage={world.stage}
+          characterId={world.characterId}
+          characterVariant={world.characterVariant}
         />
       )}
     </main>

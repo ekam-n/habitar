@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { resetStreak, getHabit } from "@/lib/db/actions";
-import { generateTitle } from "@/lib/rules/titles";
+import { generateTitle, getStreakState } from "@/lib/rules/titles";
 import { HabitProfile } from "@/lib/rules/habits";
 
 export async function POST(req: NextRequest) {
@@ -19,5 +19,5 @@ export async function POST(req: NextRequest) {
     rawInput:    habit.raw_input,
   };
   const title = generateTitle(profile, 0, false);
-  return NextResponse.json({ ok: true, title });
+  return NextResponse.json({ ok: true, title, stage: getStreakState(0, false), streak: 0 });
 }

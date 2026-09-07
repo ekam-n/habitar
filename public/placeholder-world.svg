@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024" role="img" aria-label="Placeholder habit world">
+  <!--
+    Committed fallback scene. Used by dev mode and by the background <img>
+    onError handler, because public/generated/ is gitignored and therefore
+    empty on a fresh clone.
+
+    Deliberately matches the ComfyUI style instruction in
+    src/lib/rules/prompts.ts: flat vector illustration, clean lines, soft
+    palette, no text, no characters, no faces.
+  -->
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f7f2ea"/>
+      <stop offset="100%" stop-color="#e8c99a"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1024" height="1024" fill="url(#sky)"/>
+
+  <!-- sun -->
+  <circle cx="512" cy="392" r="118" fill="#f0d5a8"/>
+  <circle cx="512" cy="392" r="84" fill="#e3b878"/>
+
+  <!-- far hills -->
+  <path d="M0 620 C 150 548, 300 596, 440 620 C 600 648, 760 570, 1024 616 L1024 1024 L0 1024 Z" fill="#ddd2bd"/>
+
+  <!-- mid hills -->
+  <path d="M0 716 C 190 656, 360 712, 540 724 C 720 736, 880 684, 1024 706 L1024 1024 L0 1024 Z" fill="#c9b99e"/>
+
+  <!-- foreground ground -->
+  <path d="M0 836 C 220 796, 420 828, 620 840 C 800 851, 920 832, 1024 824 L1024 1024 L0 1024 Z" fill="#c17f4a"/>
+
+  <!-- path winding to the horizon -->
+  <path d="M512 1024 C 496 944, 528 892, 540 848 C 550 812, 528 786, 512 762" fill="none" stroke="#ede6d6" stroke-width="46" stroke-linecap="round" opacity="0.55"/>
+
+  <!-- small shrubs, no characters -->
+  <circle cx="236" cy="826" r="30" fill="#8e6a3f"/>
+  <circle cx="278" cy="836" r="21" fill="#8e6a3f"/>
+  <circle cx="806" cy="812" r="26" fill="#8e6a3f"/>
+  <circle cx="770" cy="822" r="18" fill="#8e6a3f"/>
+</svg>
