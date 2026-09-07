@@ -20,9 +20,9 @@ interface Props {
   logging: boolean;
   missedYesterday: boolean;
 
-  // Phase 0 plumbing. Accepted and intentionally unrendered: the 3D layer
-  // that consumes them lands in the next phase. `stage` is streak-derived,
-  // the two character fields are the user's chosen appearance.
+  // `stage` is streak-derived and now drives the character's appearance.
+  // characterId / characterVariant are still plumbing: phase 2 consumes them
+  // to pick a GLB and a colourway.
   stage: StreakState;
   characterId: string | null;
   characterVariant: string | null;
@@ -34,7 +34,7 @@ interface Props {
 export default function HabitWorldCard({
   title, bgImagePath,
   streak, buttonLabel, onLog, onReset, onDelete, logging, missedYesterday,
-  onCharacterError,
+  stage, onCharacterError,
 }: Props) {
   return (
     <div className="flex flex-col gap-4 w-full max-w-md">
@@ -63,7 +63,7 @@ export default function HabitWorldCard({
 
         {/* Character — the slot the deleted SVG avatar used to occupy */}
         <div className="absolute bottom-0 left-1/2 -translate-x-1/2 z-10 w-1/3 h-2/3">
-          <CharacterCanvas onError={onCharacterError} />
+          <CharacterCanvas stage={stage} streak={streak} onError={onCharacterError} />
         </div>
 
         {/* Streak counter — top left */}

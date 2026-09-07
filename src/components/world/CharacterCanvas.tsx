@@ -1,8 +1,11 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
-import { Canvas } from "@react-three/fiber";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { Canvas, useFrame } from "@react-three/fiber";
+import * as THREE from "three";
 import CanvasErrorBoundary from "./CanvasErrorBoundary";
+import { resolveTreatment, growthStageForStreak } from "@/lib/rules/character";
+import type { StreakState } from "@/lib/rules/titles";
 
 /*
  * CAMERA AND SIZING CONTRACT — read this before changing the container.
@@ -86,6 +89,10 @@ const CAMERA_FOV = 35;
 const CAMERA_POSITION: [number, number, number] = [0, 0, 5];
 
 interface Props {
+  /** Full display state from getStreakState; may be "recovery". */
+  stage: StreakState;
+  /** Raw streak, used to recover the growth rung underneath a recovery state. */
+  streak: number;
   /** Surfaced to the user via page.tsx's error state. */
   onError?: (message: string) => void;
 }
@@ -100,6 +107,55 @@ interface Props {
  * fallback only has to avoid a visual pop, hence the same silhouette at low
  * segment counts and reduced opacity.
  */
+/**
+ * The placeholder character.
+ *
+ * Stage changes are eased rather than snapped: scale and colour are lerped
+ * toward the target every frame. TRANSITION_RATE is a per-second convergence
+ * rate applied as 1 - exp(-rate * dt), which is framerate-independent — a
+ * plain `lerp(current, target, 0.1)` would move faster on a 120Hz display
+ * than on a 60Hz one.
+ */
+const TRANSITION_RATE = 3.2;
+
+function PlaceholderCharacter({ stage, streak }: { stage: StreakState; streak: number }) {
+  const mesh = useRef<THREE.Mesh>(null);
+  const material = useRef<THREE.MeshStandardMaterial>(null);
+
+  const target = resolveTreatment(stage, growthStageForStreak(streak));
+  // Memoised rather than held in a ref and mutated during render, which is
+  // what React's refs rule (correctly) rejects.
+  const targetColor = useMemo(() => new THREE.Color(target.color), [target.color]);
+
+  useFrame((_, delta) => {
+    // clamp delta so a backgrounded tab does not jump on return
+    const t = 1 - Math.exp(-TRANSITION_RATE * Math.min(delta, 0.1));
+    if (mesh.current) {
+      const s = mesh.current.scale.x + (target.scale - mesh.current.scale.x) * t;
+      mesh.current.scale.setScalar(s);
+    }
+    if (material.current) {
+      material.current.color.lerp(targetColor, t);
+      const e = material.current.emissiveIntensity;
+      material.current.emissiveIntensity = e + (target.vitality * 0.25 - e) * t;
+    }
+  });
+
+  return (
+    <mesh ref={mesh} scale={0.7}>
+      <capsuleGeometry args={[0.38, 0.85, 8, 24]} />
+      <meshStandardMaterial
+        ref={material}
+        color="#d9c9b2"
+        emissive="#c17f4a"
+        emissiveIntensity={0}
+        roughness={0.55}
+        metalness={0.05}
+      />
+    </mesh>
+  );
+}
+
 function LoadingPlaceholder() {
   return (
     <mesh>
@@ -132,7 +188,7 @@ function detectWebGL(): boolean {
   }
 }
 
-export default function CharacterCanvas({ onError }: Props) {
+export default function CharacterCanvas({ stage, streak, onError }: Props) {
   // null = not probed yet (also the SSR pass, where there is no document).
   const [supported, setSupported] = useState<boolean | null>(null);
 
@@ -183,10 +239,7 @@ export default function CharacterCanvas({ onError }: Props) {
         <ambientLight intensity={0.9} />
         <directionalLight position={[2, 4, 3]} intensity={1.6} />
 
-        <mesh>
-          <capsuleGeometry args={[0.38, 0.85, 8, 24]} />
-          <meshStandardMaterial color="#c17f4a" roughness={0.55} metalness={0.05} />
-        </mesh>
+        <PlaceholderCharacter stage={stage} streak={streak} />
       </Suspense>
       </CanvasErrorBoundary>
     </Canvas>
