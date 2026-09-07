@@ -1,6 +1,7 @@
 "use client";
 
 import type { StreakState } from "@/lib/rules/titles";
+import CharacterCanvas from "./world/CharacterCanvas";
 
 /**
  * Committed fallback scene. public/generated/ is gitignored, so a bg path
@@ -55,6 +56,11 @@ export default function HabitWorldCard({
             if (!img.src.endsWith(PLACEHOLDER_BG)) img.src = PLACEHOLDER_BG;
           }}
         />
+
+        {/* Character — the slot the deleted SVG avatar used to occupy */}
+        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 z-10 w-1/3 h-2/3">
+          <CharacterCanvas />
+        </div>
 
         {/* Streak counter — top left */}
         <div className="absolute top-4 left-4 z-20 bg-white/90 backdrop-blur-sm rounded-xl px-3 py-2 shadow-md">
